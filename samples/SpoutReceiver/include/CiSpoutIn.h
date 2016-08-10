@@ -4,7 +4,7 @@
 #include "cinder/Log.h"
 #include "spout.h"
 
-namespace ci {
+namespace cinder {
 
 class SpoutIn {
 public:
