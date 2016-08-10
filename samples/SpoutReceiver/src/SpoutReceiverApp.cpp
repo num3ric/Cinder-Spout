@@ -57,10 +57,12 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-struct SpoutIn {
-	SpoutIn( gl::Texture2dRef& texture )
-		: mMemorySharedMode{ false }
-		, mSize{ app::getWindowSize() }
+class SpoutIn {
+public:
+	SpoutIn()
+	: mMemorySharedMode{ false }
+	, mSize{ app::getWindowSize() }
+	, mTexture{ nullptr }
 	{
 		// This is a receiver, so the initialization is a little more complex than a sender
 		// The receiver will attempt to connect to the name it is sent.
@@ -78,7 +80,7 @@ struct SpoutIn {
 			mMemorySharedMode = mSpoutReceiver.GetMemoryShareMode();
 			CI_LOG_I( "Memory share: " << mMemorySharedMode );
 
-			resize( texture );
+			resize();
 		}
 		else {
 			throw std::exception( " Failed to initialize receiver." );
@@ -87,36 +89,36 @@ struct SpoutIn {
 	~SpoutIn() {
 		mSpoutReceiver.ReleaseReceiver();
 	}
-	bool getTexture( gl::Texture2dRef& texture ) {
-		// Save current global width and height - they will be changed
-		// by receivetexture if the sender changes dimensions
 
+	gl::Texture2dRef getTexture() {
 		// Try to receive the texture at the current size 
-		if( mSpoutReceiver.ReceiveTexture( mSenderName, mSize.x, mSize.y, texture->getId(), texture->getTarget() ) ) {
+		if( mSpoutReceiver.ReceiveTexture( mSenderName, mSize.x, mSize.y, mTexture->getId(), mTexture->getTarget() ) ) {
 			//	Width and height are changed for sender change so the local texture has to be resized.
-			return ! resize( texture );
+			return resize() ? nullptr : mTexture;
 		}
-		return false;
+		return nullptr;
 	}
 
-	ivec2 getSize() {
+	ivec2 getSize() const {
 		return mSize;
 	}
 
-	bool resize( gl::Texture2dRef& texture )
+	bool			mMemorySharedMode;
+	char			mSenderName[256];			// sender name 
+	SpoutReceiver	mSpoutReceiver;	// Create a Spout receiver object
+private:
+	bool resize()
 	{
-		if( texture && mSize == uvec2( texture->getSize() ) )
+		if( mTexture && mSize == uvec2( mTexture->getSize() ) )
 			return false;
 
 		CI_LOG_I( "Recreated texture with size: " << mSize );
-		texture = gl::Texture2d::create( mSize.x, mSize.y, gl::Texture::Format().loadTopDown() );
+		mTexture = gl::Texture2d::create( mSize.x, mSize.y, gl::Texture::Format().loadTopDown() );
 		return true;
 	}
 
-	uvec2 mSize;
-	bool mMemorySharedMode;
-	char mSenderName[256];			// sender name 
-	SpoutReceiver mSpoutReceiver;	// Create a Spout receiver object
+	uvec2			mSize;
+	gl::TextureRef	mTexture;
 };
 
 class SpoutReceiverApp : public App {
@@ -126,28 +128,18 @@ public:
 	void update() override;
 	void mouseDown(MouseEvent event) override;
 
-	gl::TextureRef				mSpoutTexture;
 	std::unique_ptr<SpoutIn>	mSpoutIn;
 };
 
 SpoutReceiverApp::SpoutReceiverApp()
 {
-	try {
-		mSpoutIn = std::unique_ptr<SpoutIn>( new SpoutIn{ mSpoutTexture } );
-	}
-	catch( ... ) {
-		mSpoutIn = nullptr;
-	}
+	mSpoutIn = std::unique_ptr<SpoutIn>( new SpoutIn );
 }
 
 void SpoutReceiverApp::update()
 {
-	if( mSpoutIn ) {
-		mSpoutIn->getTexture( mSpoutTexture );
-
-		if( mSpoutTexture->getSize() != app::getWindowSize() ) {
-			app::setWindowSize( mSpoutTexture->getSize() );
-		}
+	if( mSpoutIn->getSize() != app::getWindowSize() ) {
+		app::setWindowSize( mSpoutIn->getSize() );
 	}
 }
 
@@ -157,9 +149,10 @@ void SpoutReceiverApp::draw()
 	gl::color( Color::white() );
 	char txt[256];
 
-	if( mSpoutTexture ) {
+	auto tex = mSpoutIn->getTexture();
+	if( tex ) {
 		// Otherwise draw the texture and fill the screen
-		gl::draw( mSpoutTexture, getWindowBounds() );
+		gl::draw( tex, getWindowBounds() );
 
 		// Show the user what it is receiving
 		gl::ScopedBlendAlpha alpha;
@@ -173,7 +166,7 @@ void SpoutReceiverApp::draw()
 	else {
 		gl::ScopedBlendAlpha alpha;
 		gl::enableAlphaBlending();
-		gl::drawString( "No sender detected", vec2( toPixels( 20 ), toPixels( 20 ) ), Color( 1, 1, 1 ), Font( "Verdana", toPixels( 24 ) ) );
+		gl::drawString( "No sender/texture detected", vec2( toPixels( 20 ), toPixels( 20 ) ), Color( 1, 1, 1 ), Font( "Verdana", toPixels( 24 ) ) );
 	}
 }
 void SpoutReceiverApp::mouseDown(MouseEvent event)
