@@ -103,7 +103,7 @@
       <IgnoreSpecificDefaultLibraries>LIBCMT;LIBCPMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "..\..\..\lib\Spout2.dll" "$(OutDir)"
+      <Command>xcopy /y "..\..\..\lib\Spout.dll" "$(OutDir)"
 xcopy /y "..\..\..\lib\SpoutPanel.exe" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -134,7 +134,7 @@
       <IgnoreSpecificDefaultLibraries>LIBCMT;LIBCPMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "..\..\..\lib\Spout2.dll" "$(OutDir)"
+      <Command>xcopy /y "..\..\..\lib\Spout.dll" "$(OutDir)"
 xcopy /y "..\..\..\lib\SpoutPanel.exe" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -167,7 +167,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "..\..\..\lib\Spout2.dll" "$(OutDir)"
+      <Command>xcopy /y "..\..\..\lib\Spout.dll" "$(OutDir)"
 xcopy /y "..\..\..\lib\SpoutPanel.exe" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -202,7 +202,7 @@
       </DataExecutionPrevention>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "..\..\..\lib\Spout2.dll" "$(OutDir)"
+      <Command>xcopy /y "..\..\..\lib\Spout.dll" "$(OutDir)"
 xcopy /y "..\..\..\lib\SpoutPanel.exe" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -210,6 +210,8 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\CiSpoutIn.h" />
+    <ClInclude Include="..\include\CiSpoutOut.h" />
     <ClInclude Include="..\include\Resources.h" />
   </ItemGroup>
   <ItemGroup>
